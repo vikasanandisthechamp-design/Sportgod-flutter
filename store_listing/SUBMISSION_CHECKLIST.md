@@ -1,5 +1,23 @@
 # App Store Submission Checklist
 
+## Step 0 — Firebase Setup (REQUIRED FIRST — enables push notifications + crash reporting)
+
+1. Go to https://console.firebase.google.com → Create project "SportGod"
+2. **Android app:**
+   - Add app → package: `com.sportgod.app`
+   - Download `google-services.json`
+   - Place at: `android/app/google-services.json`
+3. **iOS app:**
+   - Add app → bundle ID: `com.sportgod.app`
+   - Download `GoogleService-Info.plist`
+   - Place at: `ios/Runner/GoogleService-Info.plist`
+4. In Firebase console → Cloud Messaging → enable
+5. Commit both files (they're not secret): `git add android/app/google-services.json ios/Runner/GoogleService-Info.plist && git commit -m "add: Firebase config files"`
+- [ ] Firebase project created
+- [ ] `google-services.json` added to `android/app/`
+- [ ] `GoogleService-Info.plist` added to `ios/Runner/`
+- [ ] Committed and pushed
+
 ## Pre-Submission
 
 ### Apple App Store
