@@ -16,7 +16,10 @@ class SocketService {
   Timer?                     _reconnectTimer;
   Timer?                     _pingTimer;
   int                        _reconnectCount = 0;
-  static const _maxReconnect = 10;
+  // No _maxReconnect cap — Railway kills WebSocket connections unpredictably
+  // during deploys and under load.  A match lasts 6+ hours; we must reconnect
+  // for the entire duration.  The 60s ceiling ensures we never go dark for
+  // more than one minute regardless of how many failures have occurred.
   bool _disposed = false;
 
   final String matchId;
@@ -125,13 +128,17 @@ class SocketService {
   }
 
   void _scheduleReconnect() {
-    if (_disposed || _reconnectCount >= _maxReconnect) return;
-    final delay = Duration(
-      milliseconds: (1000 * (1 << _reconnectCount)).clamp(1000, 30000),
-    );
+    // Only stop if the service has been explicitly disposed — never on count alone.
+    if (_disposed) return;
+
+    // Exponential backoff: 1s → 2s → 4s → 8s → 16s → 32s → 60s (then forever at 60s).
+    // Clamp the exponent at 6 to avoid integer overflow (2^6 = 64 > 60).
+    final expSeconds = 1 << _reconnectCount.clamp(0, 6);   // 1,2,4,8,16,32,64
+    final delaySecs  = expSeconds.clamp(1, 60);             // cap at 60s
     _reconnectCount++;
+
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(delay, connect);
+    _reconnectTimer = Timer(Duration(seconds: delaySecs), connect);
   }
 
   void dispose() {

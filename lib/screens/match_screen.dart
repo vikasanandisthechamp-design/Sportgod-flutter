@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/cricket_models.dart';
@@ -25,6 +27,16 @@ class _MatchScreenState extends State<MatchScreen>
   late  SocketService _socket;
   late  TabController _tabController;
 
+  // Stream subscription handles — must be stored so they can be cancelled in
+  // dispose().  Without these, the listeners are leaked: the SocketService
+  // gets disposed but the anonymous listeners hold references to BuildContext
+  // and setState, keeping the widget alive and firing setState on a dead widget.
+  StreamSubscription<SocketState>?           _stateSub;
+  StreamSubscription<Map<String, dynamic>>?  _snapshotSub;
+  StreamSubscription<BallEvent>?             _ballSub;
+  StreamSubscription<Map<String, dynamic>>?  _scorecardSub;
+  StreamSubscription<List<BallEvent>>?       _commentarySub;
+
   CricketMatch? _match;
   Scorecard?    _scorecard;
   Prediction?   _prediction;
@@ -41,18 +53,18 @@ class _MatchScreenState extends State<MatchScreen>
     _tabController = TabController(length: 3, vsync: this);
     _socket = SocketService(widget.matchId);
 
-    _socket.stateStream.listen((s) {
+    _stateSub = _socket.stateStream.listen((s) {
       if (mounted) setState(() => _socketState = s);
     });
 
-    _socket.snapshotStream.listen(_handleSnapshot);
-    _socket.ballStream.listen(_handleBall);
+    _snapshotSub = _socket.snapshotStream.listen(_handleSnapshot);
+    _ballSub     = _socket.ballStream.listen(_handleBall);
 
     // Live scorecard push: replaces the full scorecard on wickets / overs / scoring
-    _socket.scorecardStream.listen(_handleScorecardUpdate);
+    _scorecardSub = _socket.scorecardStream.listen(_handleScorecardUpdate);
 
     // Commentary batch: arrives after reconnect — merge without duplicating
-    _socket.commentaryStream.listen(_handleCommentaryHistory);
+    _commentarySub = _socket.commentaryStream.listen(_handleCommentaryHistory);
 
     _socket.connect();
     _loadInitialData();
@@ -164,6 +176,15 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   void dispose() {
+    // Cancel all stream subscriptions BEFORE disposing the socket.
+    // This prevents setState() from being called on a disposed widget if a
+    // stream event fires between socket.dispose() and super.dispose().
+    _stateSub?.cancel();
+    _snapshotSub?.cancel();
+    _ballSub?.cancel();
+    _scorecardSub?.cancel();
+    _commentarySub?.cancel();
+
     _tabController.dispose();
     _socket.dispose();
     _api.dispose();
