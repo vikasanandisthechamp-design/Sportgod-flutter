@@ -51,3 +51,13 @@ android/app/*.jks
 *.p12
 *.mobileprovision
 .gitnexus
+
+# Inovers web (Next.js subproject)
+inovers-web/node_modules
+inovers-web/.next
+inovers-web/.env
+inovers-web/.env.local
+inovers-web/.env.*.local
+inovers-web/.vercel
+inovers-web/tsconfig.tsbuildinfo
+inovers-web/next-env.d.ts
