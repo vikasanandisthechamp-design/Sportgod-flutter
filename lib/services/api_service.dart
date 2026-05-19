@@ -1,12 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../config/env_config.dart';
 import '../models/cricket_models.dart';
-
-const _baseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://sportgod-backend-production.up.railway.app',
-);
 
 class ApiService {
   final http.Client _client;
@@ -18,7 +14,7 @@ class ApiService {
     for (var i = 0; i <= retries; i++) {
       try {
         final res = await _client
-            .get(Uri.parse('$_baseUrl$path'))
+            .get(Uri.parse('${Env.apiBaseUrl}$path'))
             .timeout(Duration(seconds: timeoutSec));
         if (res.statusCode >= 200 && res.statusCode < 300) return res;
         if (res.statusCode >= 500 && i < retries) {
@@ -121,10 +117,18 @@ class ApiService {
     }
   }
 
+  // ── Player profile ────────────────────────────────────────────────
+  Future<Map<String, dynamic>> getPlayer(String playerId) async {
+    final res = await _get('/api/v1/players/$playerId');
+    _assertOk(res);
+    final body = json.decode(res.body) as Map<String, dynamic>;
+    return body['data'] as Map<String, dynamic>;
+  }
+
   // ── Premium / Payments ────────────────────────────────────────────
   Future<Map<String, dynamic>> validateCoupon(String code, String? token) async {
     try {
-      final uri = Uri.parse('$_baseUrl/api/v1/influencer/validate-coupon?coupon=${Uri.encodeComponent(code)}');
+      final uri = Uri.parse('${Env.apiBaseUrl}/api/v1/influencer/validate-coupon?coupon=${Uri.encodeComponent(code)}');
       final res = await _client.get(uri, headers: {
         if (token != null) 'Authorization': 'Bearer $token',
       }).timeout(const Duration(seconds: 8));
@@ -138,7 +142,7 @@ class ApiService {
     required int amount,
     required String? accessToken,
   }) async {
-    final uri = Uri.parse('$_baseUrl/api/v1/payments/create-order');
+    final uri = Uri.parse('${Env.apiBaseUrl}/api/v1/payments/create-order');
     final res = await _client.post(
       uri,
       headers: {
@@ -157,7 +161,7 @@ class ApiService {
     required String signature,
     required String? accessToken,
   }) async {
-    final uri = Uri.parse('$_baseUrl/api/v1/payments/verify');
+    final uri = Uri.parse('${Env.apiBaseUrl}/api/v1/payments/verify');
     final res = await _client.post(
       uri,
       headers: {

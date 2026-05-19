@@ -6,6 +6,7 @@ import '../../models/contest_models.dart';
 import '../../services/contest_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ContestsScreen extends StatefulWidget {
   final String matchId;
@@ -388,7 +389,7 @@ class _ContestsScreenState extends State<ContestsScreen>
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList(itemCount: 4)
           : TabBarView(
               controller: _tabCtrl,
               children: [

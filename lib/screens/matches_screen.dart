@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
+import '../services/favorites_service.dart';
 import '../models/cricket_models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shimmer_loading.dart';
 import '../widgets/team_logo_widget.dart';
 
 class MatchesScreen extends StatefulWidget {
@@ -15,7 +17,9 @@ class MatchesScreen extends StatefulWidget {
 
 class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserver {
   final _api = ApiService();
+  final _favService = FavoritesService();
   List<CricketMatch> _matches = [];
+  Set<String> _favoriteIds = {};
   bool  _loading  = true;
   bool  _silentRefreshing = false;
   Timer? _pollTimer;
@@ -54,8 +58,16 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
     try {
       _matches = await _api.getLiveMatches();
     } catch (_) {}
+    await _loadFavorites();
     if (mounted) setState(() => _loading = false);
     _schedulePoll();
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      final ids = await _favService.getFavorites();
+      if (mounted) setState(() => _favoriteIds = ids.toSet());
+    } catch (_) {}
   }
 
   Future<void> _silentRefresh() async {
@@ -63,7 +75,13 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
     _silentRefreshing = true;
     try {
       final matches = await _api.getLiveMatches();
-      if (mounted) setState(() => _matches = matches);
+      final ids = await _favService.getFavorites();
+      if (mounted) {
+        setState(() {
+          _matches = matches;
+          _favoriteIds = ids.toSet();
+        });
+      }
     } catch (_) {}
     _silentRefreshing = false;
   }
@@ -79,6 +97,7 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    final favorites = _matches.where((m) => _favoriteIds.contains(m.id)).toList();
     final live  = _matches.where((m) => m.isLive).toList();
     final other = _matches.where((m) => !m.isLive).toList();
 
@@ -102,12 +121,18 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList()
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  if (favorites.isNotEmpty) ...[
+                    _sectionHeader('FAVORITES', SGColors.warn),
+                    const SizedBox(height: 8),
+                    ...favorites.map(_matchCard),
+                    const SizedBox(height: 20),
+                  ],
                   if (live.isNotEmpty) ...[
                     _sectionHeader('LIVE', SGColors.live),
                     const SizedBox(height: 8),

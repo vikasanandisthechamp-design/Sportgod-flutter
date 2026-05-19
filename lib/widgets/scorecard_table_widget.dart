@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/cricket_models.dart';
 import '../theme/app_theme.dart';
 
@@ -217,7 +218,14 @@ class _BattingRow extends StatelessWidget {
       children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Flexible(child: Text(row.playerName, style: const TextStyle(color: SGColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+            Flexible(child: GestureDetector(
+              onTap: () {
+                if (row.playerId.isNotEmpty) {
+                  context.push('/player/${row.playerId}?name=${Uri.encodeComponent(row.playerName)}');
+                }
+              },
+              child: Text(row.playerName, style: const TextStyle(color: SGColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: SGColors.textMuted, decorationStyle: TextDecorationStyle.dotted), overflow: TextOverflow.ellipsis),
+            )),
             if (row.isNotOut) const Text(' *', style: TextStyle(color: SGColors.good, fontSize: 12, fontWeight: FontWeight.w700)),
           ]),
           Text(row.howOut, style: const TextStyle(color: SGColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis),
@@ -244,7 +252,14 @@ class _BowlingRow extends StatelessWidget {
     color: alt ? Colors.white.withValues(alpha: 0.02) : Colors.transparent,
     child: Row(
       children: [
-        Expanded(child: Text(row.playerName, style: const TextStyle(color: SGColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+        Expanded(child: GestureDetector(
+          onTap: () {
+            if (row.playerId.isNotEmpty) {
+              context.push('/player/${row.playerId}?name=${Uri.encodeComponent(row.playerName)}');
+            }
+          },
+          child: Text(row.playerName, style: const TextStyle(color: SGColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: SGColors.textMuted, decorationStyle: TextDecorationStyle.dotted), overflow: TextOverflow.ellipsis),
+        )),
         _Cell('${row.overs}'),
         _Cell('${row.maidens}'),
         _Cell('${row.runs}'),

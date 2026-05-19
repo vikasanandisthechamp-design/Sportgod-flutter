@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
 import '../models/cricket_models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shimmer_loading.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -84,7 +85,7 @@ class _GamesScreenState extends State<GamesScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(title: const Text('Games')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList(itemCount: 4)
           : _error != null
               ? Center(child: Padding(
                   padding: const EdgeInsets.all(32),

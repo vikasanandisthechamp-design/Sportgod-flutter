@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'providers/auth_provider.dart';
@@ -68,24 +69,30 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
+  // Check whether the user has completed onboarding
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CoinsProvider()),
       ],
-      child: const SportGodApp(),
+      child: SportGodApp(showOnboarding: !onboardingComplete),
     ),
   );
 }
 
 class SportGodApp extends StatelessWidget {
-  const SportGodApp({super.key});
+  final bool showOnboarding;
+
+  const SportGodApp({super.key, this.showOnboarding = false});
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final router = buildRouter(auth);
+    final router = buildRouter(auth, showOnboarding: showOnboarding);
 
     return MaterialApp.router(
       title: 'SportGod AI',

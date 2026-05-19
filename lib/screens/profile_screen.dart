@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/coins_provider.dart';
 import '../theme/app_theme.dart';
+import 'edit_profile_screen.dart';
 import 'history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -66,6 +67,14 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               )),
+              IconButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                ),
+                icon: const Icon(Icons.edit_outlined, color: SGColors.textMuted, size: 20),
+                tooltip: 'Edit Profile',
+              ),
             ]),
           ),
           const SizedBox(height: 16),
@@ -171,7 +180,7 @@ class ProfileScreen extends StatelessWidget {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()));
           }),
           _menuItem(context, Icons.leaderboard_rounded, 'Global Leaderboard', 'Top players this season', () {
-            context.go('/');  // Navigate home for now — global leaderboard on roadmap
+            context.push('/leaderboard');
           }),
 
           const SizedBox(height: 16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../config/env_config.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
@@ -22,10 +23,7 @@ class PremiumScreen extends StatefulWidget {
 }
 
 class _PremiumScreenState extends State<PremiumScreen> {
-  static const String _razorpayKeyId = String.fromEnvironment(
-    'RAZORPAY_KEY_ID',
-    defaultValue: 'rzp_test_placeholder',  // replace with rzp_live_... for production
-  );
+  static const String _razorpayKeyId = Env.razorpayKeyId;
 
   late Razorpay _razorpay;
   final _api = ApiService();

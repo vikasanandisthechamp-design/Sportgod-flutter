@@ -4,16 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import '../../config/env_config.dart';
 import '../../models/cricket_models.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/socket_service.dart';
 import '../../theme/app_theme.dart';
-
-const _backend = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://sportgod-backend-production.up.railway.app',
-);
+import '../../widgets/shimmer_loading.dart';
 
 // ── Fantasy Points System ──────────────────────────────────────────────
 // Mirrors the backend scoring — batting + bowling + fielding + bonus
@@ -219,7 +216,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     try {
       // Backend returns ALL teams for this user — filter by match_id client-side
       final res = await http.get(
-        Uri.parse('$_backend/api/v1/fantasy/user/teams'),
+        Uri.parse('${Env.apiBaseUrl}/api/v1/fantasy/user/teams'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
 
@@ -253,7 +250,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     try {
       // Correct endpoint: /squad/{match_id} returns players with credits + selection %
       final res = await http.get(
-        Uri.parse('$_backend/api/v1/fantasy/squad/${widget.matchId}'),
+        Uri.parse('${Env.apiBaseUrl}/api/v1/fantasy/squad/${widget.matchId}'),
         headers: {if (token != null) 'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
 
@@ -372,7 +369,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
           .toList();
 
       final res = await http.post(
-        Uri.parse('$_backend/api/v1/fantasy/team/submit'),
+        Uri.parse('${Env.apiBaseUrl}/api/v1/fantasy/team/submit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -459,7 +456,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList(itemCount: 4)
           : _error != null
               ? _buildErrorState()
               : Column(

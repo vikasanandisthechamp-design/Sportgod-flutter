@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config/env_config.dart';
 import '../models/contest_models.dart';
-
-const _webBase = 'https://sportgod.in';
 
 class ContestService {
   final http.Client _client;
@@ -22,7 +21,7 @@ class ContestService {
     try {
       final res = await _client
           .get(
-            Uri.parse('$_webBase/api/v2/contests?match_id=$matchId&status=$status'),
+            Uri.parse('${Env.webBaseUrl}/api/v2/contests?match_id=$matchId&status=$status'),
             headers: _headers,
           )
           .timeout(const Duration(seconds: 12));
@@ -51,7 +50,7 @@ class ContestService {
   }) async {
     final res = await _client
         .post(
-          Uri.parse('$_webBase/api/v2/contests/create'),
+          Uri.parse('${Env.webBaseUrl}/api/v2/contests/create'),
           headers: _headers,
           body: json.encode({
             'match_id': matchId,
@@ -79,7 +78,7 @@ class ContestService {
   }) async {
     final res = await _client
         .post(
-          Uri.parse('$_webBase/api/v2/contests/join'),
+          Uri.parse('${Env.webBaseUrl}/api/v2/contests/join'),
           headers: _headers,
           body: json.encode({
             if (contestId != null) 'contest_id': contestId,
@@ -104,7 +103,7 @@ class ContestService {
     try {
       final res = await _client
           .get(
-            Uri.parse('$_webBase/api/v2/contests/leaderboard?$query'),
+            Uri.parse('${Env.webBaseUrl}/api/v2/contests/leaderboard?$query'),
             headers: _headers,
           )
           .timeout(const Duration(seconds: 12));
@@ -121,7 +120,7 @@ class ContestService {
     try {
       final res = await _client
           .get(
-            Uri.parse('$_webBase/api/v2/partners'),
+            Uri.parse('${Env.webBaseUrl}/api/v2/partners'),
             headers: _headers,
           )
           .timeout(const Duration(seconds: 12));
@@ -137,7 +136,7 @@ class ContestService {
   Future<Map<String, dynamic>> applyPartner({String? bio}) async {
     final res = await _client
         .post(
-          Uri.parse('$_webBase/api/v2/partners/apply'),
+          Uri.parse('${Env.webBaseUrl}/api/v2/partners/apply'),
           headers: _headers,
           body: json.encode({
             if (bio != null) 'bio': bio,
@@ -153,7 +152,7 @@ class ContestService {
     try {
       await _client
           .post(
-            Uri.parse('$_webBase/api/v2/referrals'),
+            Uri.parse('${Env.webBaseUrl}/api/v2/referrals'),
             headers: _headers,
             body: json.encode({
               'ref_code': refCode,

@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-const _backend = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://sportgod-backend-production.up.railway.app',
-);
+import '../config/env_config.dart';
 
 class CoinsProvider extends ChangeNotifier {
   int _balance = 0;
@@ -20,7 +16,7 @@ class CoinsProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final res = await http.get(
-        Uri.parse('$_backend/api/v1/wallet/balance'),
+        Uri.parse('${Env.apiBaseUrl}/api/v1/wallet/balance'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {

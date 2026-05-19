@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/cricket_models.dart';
 import '../services/api_service.dart';
+import '../services/favorites_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shimmer_loading.dart';
 import '../widgets/team_logo_widget.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -94,6 +97,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text('AI', style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.w800)),
         ]),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded, size: 22),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SearchScreen()),
+            ),
+            tooltip: 'Search',
+          ),
           // Pulsing dot when silently refreshing live matches
           if (_silentRefreshing)
             const Padding(
@@ -114,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList()
           : _error != null
             ? _ErrorView(error: _error!, onRetry: _load)
             : _matches.isEmpty
@@ -133,20 +144,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 }
 
-class _MatchCard extends StatelessWidget {
+class _MatchCard extends StatefulWidget {
   final CricketMatch match;
   final VoidCallback onTap;
   const _MatchCard({required this.match, required this.onTap});
 
   @override
+  State<_MatchCard> createState() => _MatchCardState();
+}
+
+class _MatchCardState extends State<_MatchCard> {
+  static final _favService = FavoritesService();
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorite();
+  }
+
+  Future<void> _loadFavorite() async {
+    final fav = await _favService.isFavorite(widget.match.id);
+    if (mounted) setState(() => _isFavorite = fav);
+  }
+
+  Future<void> _toggleFavorite() async {
+    await _favService.toggleFavorite(widget.match.id);
+    if (mounted) setState(() => _isFavorite = !_isFavorite);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final match = widget.match;
     final homeRuns  = match.homeRuns;
     final awayRuns  = match.awayRuns;
     final latestHome = homeRuns.lastOrNull;
     final latestAway = awayRuns.lastOrNull;
 
     return SGCard(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -154,7 +190,21 @@ class _MatchCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(match.matchType, style: const TextStyle(color: SGColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
-              _StatusBadge(status: match.status),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: _toggleFavorite,
+                    child: Icon(
+                      _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      size: 18,
+                      color: _isFavorite ? SGColors.live : SGColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _StatusBadge(status: match.status),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 14),

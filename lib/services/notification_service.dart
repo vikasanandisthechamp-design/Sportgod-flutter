@@ -4,12 +4,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/env_config.dart';
 import '../router/app_router.dart';
-
-const _apiBase = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://sportgod-backend-production.up.railway.app',
-);
 
 /// Handles Firebase Cloud Messaging push notifications.
 ///
@@ -82,7 +78,7 @@ class NotificationService {
 
       final platform = defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
       final res = await http.post(
-        Uri.parse('$_apiBase/api/v1/notifications/register-device'),
+        Uri.parse('${Env.apiBaseUrl}/api/v1/notifications/register-device'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${session.accessToken}',

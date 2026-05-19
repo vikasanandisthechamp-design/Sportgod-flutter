@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../config/env_config.dart';
 import '../models/cricket_models.dart';
-
-const _wsBaseUrl = String.fromEnvironment(
-  'WS_BASE_URL',
-  defaultValue: 'wss://sportgod-backend-production.up.railway.app',
-);
 
 enum SocketState { connecting, connected, disconnected, error }
 
@@ -48,7 +44,7 @@ class SocketService {
     _stateController.add(SocketState.connecting);
 
     try {
-      final uri = Uri.parse('$_wsBaseUrl/ws/matches/$matchId');
+      final uri = Uri.parse('${Env.wsBaseUrl}/ws/matches/$matchId');
       _channel = WebSocketChannel.connect(uri);
 
       _sub = _channel!.stream.listen(

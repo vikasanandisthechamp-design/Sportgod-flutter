@@ -3,15 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../config/env_config.dart';
 import '../../providers/coins_provider.dart';
 import '../../theme/app_theme.dart';
-
-// Next.js web app URL — used for prediction submit (handles coin deduction atomically).
-// Reads come directly from Supabase to minimise latency.
-const _webUrl = String.fromEnvironment(
-  'WEB_URL',
-  defaultValue: 'https://sportgod.ai',
-);
+import '../../widgets/shimmer_loading.dart';
 
 class PredictScreen extends StatefulWidget {
   final String matchId;
@@ -114,7 +109,7 @@ class _PredictScreenState extends State<PredictScreen> {
     try {
       final token = _sb.auth.currentSession?.accessToken;
       final res = await http.get(
-        Uri.parse('$_webUrl/api/v2/predictions/${widget.matchId}'),
+        Uri.parse('${Env.webBaseUrl}/api/v2/predictions/${widget.matchId}'),
         headers: {if (token != null) 'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
@@ -150,7 +145,7 @@ class _PredictScreenState extends State<PredictScreen> {
       try {
         // Submit via Next.js web API — handles atomic coin deduction
         final res = await http.post(
-          Uri.parse('$_webUrl/api/v2/predictions/submit'),
+          Uri.parse('${Env.webBaseUrl}/api/v2/predictions/submit'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
@@ -208,7 +203,7 @@ class _PredictScreenState extends State<PredictScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerList(itemCount: 4)
           : _error != null
               ? _ErrorState(error: _error!, onRetry: _load)
               : _questions.isEmpty

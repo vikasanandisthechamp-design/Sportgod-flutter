@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../screens/shell_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/onboarding_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/match_screen.dart';
 import '../screens/fantasy/team_builder_screen.dart';
@@ -10,28 +11,46 @@ import '../screens/contests/contests_screen.dart';
 import '../screens/partner/partner_screen.dart';
 import '../screens/legal/privacy_screen.dart';
 import '../screens/legal/terms_screen.dart';
+import '../screens/player_screen.dart';
 import '../screens/premium_screen.dart';
+import '../screens/edit_profile_screen.dart';
+import '../screens/leaderboard_screen.dart';
+import '../screens/search_screen.dart';
 
 /// Singleton router instance — usable from anywhere (e.g. notification taps).
 GoRouter? appRouter;
 
 /// Builds a [GoRouter] bound to [auth] so redirects fire on sign-in / sign-out.
-GoRouter buildRouter(AuthProvider auth) {
+///
+/// When [showOnboarding] is true the initial location is `/onboarding` and the
+/// auth redirect allows that route through without requiring login.
+GoRouter buildRouter(AuthProvider auth, {bool showOnboarding = false}) {
   final router = GoRouter(
     debugLogDiagnostics: false,
-    initialLocation: '/',
+    initialLocation: showOnboarding ? '/onboarding' : '/',
     refreshListenable: auth,
 
     // ── Auth redirect ─────────────────────────────────────────────────────────
     redirect: (context, state) {
+      final loc = state.matchedLocation;
+
+      // Always allow onboarding through without auth
+      if (loc == '/onboarding') return null;
+
       final loggedIn   = auth.isLoggedIn;
-      final goingLogin = state.matchedLocation == '/login';
+      final goingLogin = loc == '/login';
       if (!loggedIn && !goingLogin) return '/login';
       if (loggedIn  && goingLogin)  return '/';
       return null;
     },
 
     routes: [
+      // Onboarding (first launch only)
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const OnboardingScreen(),
+      ),
+
       // Login
       GoRoute(
         path: '/login',
@@ -90,6 +109,24 @@ GoRouter buildRouter(AuthProvider auth) {
 
       // Premium upgrade
       GoRoute(path: '/premium', builder: (_, __) => const PremiumScreen()),
+
+      // Edit profile
+      GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
+
+      // Global leaderboard
+      GoRoute(path: '/leaderboard', builder: (_, __) => const LeaderboardScreen()),
+
+      // Player profile: sportgod://player/12345?name=Virat+Kohli
+      GoRoute(
+        path: '/player/:playerId',
+        builder: (_, state) => PlayerScreen(
+          playerId:   state.pathParameters['playerId']!,
+          playerName: state.uri.queryParameters['name'] ?? '',
+        ),
+      ),
+
+      // Search
+      GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
 
       // Static pages
       GoRoute(path: '/partner', builder: (_, __) => const PartnerScreen()),
