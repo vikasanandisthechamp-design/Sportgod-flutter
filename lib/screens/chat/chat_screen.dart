@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -61,6 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _send(String text) async {
     if (text.trim().isEmpty) return;
+    HapticFeedback.lightImpact();
     _ctrl.clear();
 
     final userMsg = ChatMessage(text: text, isUser: true);

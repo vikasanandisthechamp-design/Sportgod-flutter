@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -313,6 +314,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   void _togglePlayer(Map<String, dynamic> player) {
     if (_matchStarted) return; // Locked after match starts
 
+    HapticFeedback.selectionClick();
     final id = player['id'].toString();
     final cost = (player['credits'] ?? player['cost'] ?? 8.0).toDouble();
 
@@ -332,6 +334,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   }
 
   Future<void> _submitTeam() async {
+    HapticFeedback.mediumImpact();
     if (_matchStarted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Team is locked — match has already started')),
@@ -756,7 +759,10 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
 
   Widget _capButton(String label, bool active, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         width: 30, height: 30,
         decoration: BoxDecoration(

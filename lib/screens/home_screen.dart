@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../models/cricket_models.dart';
 import '../services/api_service.dart';
@@ -169,6 +170,7 @@ class _MatchCardState extends State<_MatchCard> {
   }
 
   Future<void> _toggleFavorite() async {
+    HapticFeedback.selectionClick();
     await _favService.toggleFavorite(widget.match.id);
     if (mounted) setState(() => _isFavorite = !_isFavorite);
   }
@@ -182,7 +184,10 @@ class _MatchCardState extends State<_MatchCard> {
     final latestAway = awayRuns.lastOrNull;
 
     return SGCard(
-      onTap: widget.onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

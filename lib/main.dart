@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'providers/auth_provider.dart';
@@ -69,9 +68,7 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  // Check whether the user has completed onboarding
-  final prefs = await SharedPreferences.getInstance();
-  final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+  // Onboarding check is now handled by SplashScreen — no need to read prefs here.
 
   runApp(
     MultiProvider(
@@ -79,20 +76,18 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CoinsProvider()),
       ],
-      child: SportGodApp(showOnboarding: !onboardingComplete),
+      child: const SportGodApp(),
     ),
   );
 }
 
 class SportGodApp extends StatelessWidget {
-  final bool showOnboarding;
-
-  const SportGodApp({super.key, this.showOnboarding = false});
+  const SportGodApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final router = buildRouter(auth, showOnboarding: showOnboarding);
+    final router = buildRouter(auth);
 
     return MaterialApp.router(
       title: 'SportGod AI',

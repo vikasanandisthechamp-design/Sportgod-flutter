@@ -108,6 +108,17 @@ class BallBadge extends StatelessWidget {
 
   const BallBadge({super.key, required this.label});
 
+  String get _semanticLabel {
+    switch (label) {
+      case 'W':  return 'Wicket';
+      case '6':  return 'Six runs';
+      case '4':  return 'Four runs';
+      case 'WD': return 'Wide ball';
+      case 'NB': return 'No ball';
+      default:   return '$label runs';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Color bg = SGColors.textMuted;
@@ -121,7 +132,9 @@ class BallBadge extends StatelessWidget {
       bg = SGColors.warn;
     }
 
-    return Container(
+    return Semantics(
+      label: _semanticLabel,
+      child: Container(
       width: 32, height: 32,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       alignment: Alignment.center,
@@ -133,6 +146,7 @@ class BallBadge extends StatelessWidget {
           fontWeight: FontWeight.w800,
         ),
       ),
+    ),
     );
   }
 }

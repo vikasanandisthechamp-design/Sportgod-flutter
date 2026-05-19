@@ -11,6 +11,7 @@ import '../widgets/live_scoreboard_widget.dart';
 import '../widgets/commentary_feed_widget.dart';
 import '../widgets/scorecard_table_widget.dart';
 import '../widgets/ai_prediction_widget.dart';
+import '../widgets/worm_chart_widget.dart';
 
 class MatchScreen extends StatefulWidget {
   final String matchId;
@@ -278,6 +279,11 @@ class _LiveTab extends StatelessWidget {
               commentary: commentary,
               ballFlash: ballFlash,
             ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+            const SizedBox(height: 12),
+            WormChartWidget(
+              scorecard: scorecard!,
+              match:     match,
+            ).animate().fadeIn(duration: 450.ms, delay: 150.ms),
             const SizedBox(height: 12),
           ],
           if (commentary.isEmpty && !match.isLive)

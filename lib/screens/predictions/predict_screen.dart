@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -397,6 +398,7 @@ class _QuestionCard extends StatelessWidget {
               final picked  = selection?.optionId == optId;
               return GestureDetector(
                 onTap: isLocked ? null : () {
+                  HapticFeedback.selectionClick();
                   onSelect(qId, picked ? null : _Selection(
                     optionId: optId, optionLabel: label, odds: odds, coins: betAmount,
                   ));

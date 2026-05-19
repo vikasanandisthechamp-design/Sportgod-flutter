@@ -18,7 +18,9 @@ class MatchHeaderWidget extends StatelessWidget {
     final homeRuns = match.runsFor(match.teamHome.id);
     final awayRuns = match.runsFor(match.teamAway.id);
 
-    return AnimatedContainer(
+    return Semantics(
+      label: 'Match between ${match.teamHome.name} and ${match.teamAway.name}, ${match.status}',
+      child: AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
         color:        SGColors.card,
@@ -78,6 +80,7 @@ class MatchHeaderWidget extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }

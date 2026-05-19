@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/coins_provider.dart';
@@ -65,23 +66,30 @@ class _ShellScreenState extends State<ShellScreen> {
 
   Widget _navItem(IconData icon, String label, int idx) {
     final active = _index == idx;
-    return GestureDetector(
-      onTap: () => setState(() => _index = idx),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 24,
-              color: active ? const Color(0xFF00E5A8) : Colors.white.withValues(alpha: 0.4)),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(
-              fontSize: 10,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-              color: active ? const Color(0xFF00E5A8) : Colors.white.withValues(alpha: 0.4),
-            )),
-          ],
+    return Semantics(
+      label: '$label tab${active ? ", selected" : ""}',
+      button: true,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          setState(() => _index = idx);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 72,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24,
+                color: active ? const Color(0xFF00E5A8) : Colors.white.withValues(alpha: 0.4)),
+              const SizedBox(height: 4),
+              Text(label, style: TextStyle(
+                fontSize: 10,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                color: active ? const Color(0xFF00E5A8) : Colors.white.withValues(alpha: 0.4),
+              )),
+            ],
+          ),
         ),
       ),
     );

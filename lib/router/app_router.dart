@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../screens/splash_screen.dart';
 import '../screens/shell_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/onboarding_screen.dart';
@@ -22,20 +23,20 @@ GoRouter? appRouter;
 
 /// Builds a [GoRouter] bound to [auth] so redirects fire on sign-in / sign-out.
 ///
-/// When [showOnboarding] is true the initial location is `/onboarding` and the
-/// auth redirect allows that route through without requiring login.
-GoRouter buildRouter(AuthProvider auth, {bool showOnboarding = false}) {
+/// The router always starts at `/splash`; the [SplashScreen] reads the
+/// onboarding flag and navigates to `/` or `/onboarding` after a short delay.
+GoRouter buildRouter(AuthProvider auth) {
   final router = GoRouter(
     debugLogDiagnostics: false,
-    initialLocation: showOnboarding ? '/onboarding' : '/',
+    initialLocation: '/splash',
     refreshListenable: auth,
 
     // ── Auth redirect ─────────────────────────────────────────────────────────
     redirect: (context, state) {
       final loc = state.matchedLocation;
 
-      // Always allow onboarding through without auth
-      if (loc == '/onboarding') return null;
+      // Always allow splash and onboarding through without auth
+      if (loc == '/splash' || loc == '/onboarding') return null;
 
       final loggedIn   = auth.isLoggedIn;
       final goingLogin = loc == '/login';
@@ -45,6 +46,12 @@ GoRouter buildRouter(AuthProvider auth, {bool showOnboarding = false}) {
     },
 
     routes: [
+      // Splash — in-app loading screen shown during initialization
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashScreen(),
+      ),
+
       // Onboarding (first launch only)
       GoRoute(
         path: '/onboarding',

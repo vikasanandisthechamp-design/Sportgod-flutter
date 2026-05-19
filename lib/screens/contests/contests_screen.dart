@@ -64,6 +64,7 @@ class _ContestsScreenState extends State<ContestsScreen>
       _contests.where((c) => !c.isPublic).toList();
 
   Future<void> _joinContest(Contest contest) async {
+    HapticFeedback.mediumImpact();
     if (widget.teamCode == null || widget.teamCode!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Build a fantasy team first to join contests')),
