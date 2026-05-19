@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/socket_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/debounce.dart';
 import '../../widgets/shimmer_loading.dart';
 
 // ── Fantasy Points System ──────────────────────────────────────────────
@@ -153,6 +154,7 @@ class TeamBuilderScreen extends StatefulWidget {
 
 class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   final _api = ApiService();
+  final _throttle = Throttle(cooldown: Duration(seconds: 2));
   List<Map<String, dynamic>> _players = [];
   final Set<String> _selected = {};
   String? _captain;
@@ -557,7 +559,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _selected.length == 11 && !_submitting ? _submitTeam : null,
+                              onPressed: _selected.length == 11 && !_submitting
+                                  ? () => _throttle.call(() => _submitTeam())
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00E5A8),
                                 foregroundColor: const Color(0xFF0F0F11),

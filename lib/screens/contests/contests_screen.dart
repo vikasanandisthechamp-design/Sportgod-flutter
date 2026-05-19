@@ -6,6 +6,7 @@ import '../../models/contest_models.dart';
 import '../../services/contest_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/debounce.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class ContestsScreen extends StatefulWidget {
@@ -30,6 +31,7 @@ class _ContestsScreenState extends State<ContestsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   late ContestService _service;
+  final _throttle = Throttle(cooldown: Duration(seconds: 2));
   List<Contest> _contests = [];
   bool _loading = true;
   bool _joining = false;
@@ -743,7 +745,7 @@ class _ContestsScreenState extends State<ContestsScreen>
                     child: ElevatedButton(
                       onPressed: c.isFull || _joining
                           ? null
-                          : () => _joinContest(c),
+                          : () => _throttle.call(() => _joinContest(c)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: c.isFull ? SGColors.textMuted : accent,
                         foregroundColor: Colors.black,

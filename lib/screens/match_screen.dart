@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/cricket_models.dart';
 import '../services/api_service.dart';
+import '../services/match_follow_service.dart';
 import '../services/socket_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/match_header_widget.dart';
@@ -12,6 +14,7 @@ import '../widgets/commentary_feed_widget.dart';
 import '../widgets/scorecard_table_widget.dart';
 import '../widgets/ai_prediction_widget.dart';
 import '../widgets/worm_chart_widget.dart';
+import '../widgets/head_to_head_widget.dart';
 
 class MatchScreen extends StatefulWidget {
   final String matchId;
@@ -24,7 +27,8 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
 
-  final _api    = ApiService();
+  final _api           = ApiService();
+  final _followService = MatchFollowService();
   late  SocketService _socket;
   late  TabController _tabController;
 
@@ -46,6 +50,7 @@ class _MatchScreenState extends State<MatchScreen>
   SocketState _socketState = SocketState.connecting;
   bool        _loading     = true;
   bool        _ballFlash   = false;
+  bool        _isFollowing = false;
   String?     _error;
 
   @override
@@ -69,6 +74,26 @@ class _MatchScreenState extends State<MatchScreen>
 
     _socket.connect();
     _loadInitialData();
+    _loadFollowState();
+  }
+
+  Future<void> _loadFollowState() async {
+    final following = await _followService.isFollowing(widget.matchId);
+    if (mounted) setState(() => _isFollowing = following);
+  }
+
+  Future<void> _toggleFollow() async {
+    HapticFeedback.selectionClick();
+    final nowFollowing = await _followService.toggleFollow(widget.matchId);
+    if (!mounted) return;
+    setState(() => _isFollowing = nowFollowing);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(nowFollowing
+          ? "You'll be notified about this match"
+          : 'Notifications off for this match'),
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ));
   }
 
   Future<void> _loadInitialData() async {
@@ -203,6 +228,15 @@ class _MatchScreenState extends State<MatchScreen>
           : '${match.teamHome.short} vs ${match.teamAway.short}',
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              _isFollowing ? Icons.notifications_rounded : Icons.notifications_none_rounded,
+              color: _isFollowing ? SGColors.primary : SGColors.textMuted,
+              size: 22,
+            ),
+            onPressed: _toggleFollow,
+            tooltip: _isFollowing ? 'Unfollow match' : 'Follow match',
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: _ConnectionDot(state: _socketState),
@@ -271,6 +305,9 @@ class _LiveTab extends StatelessWidget {
         children: [
           MatchHeaderWidget(match: match, ballFlash: ballFlash)
               .animate().fadeIn(duration: 300.ms),
+          const SizedBox(height: 12),
+          HeadToHeadWidget(match: match)
+              .animate().fadeIn(duration: 350.ms, delay: 50.ms),
           const SizedBox(height: 12),
           if (scorecard != null && match.isLive) ...[
             LiveScoreboardWidget(

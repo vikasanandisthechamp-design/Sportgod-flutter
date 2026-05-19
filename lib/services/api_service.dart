@@ -104,6 +104,19 @@ class ApiService {
     }
   }
 
+  // ── Head-to-head ───────────────────────────────────────────────────
+  Future<Map<String, dynamic>?> getHeadToHead(String matchId) async {
+    try {
+      final res = await _get('/api/v1/matches/$matchId/head-to-head');
+      if (res.statusCode == 404) return null;
+      _assertOk(res);
+      final body = json.decode(res.body) as Map<String, dynamic>;
+      return body['data'] as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ── AI Prediction ─────────────────────────────────────────────────
   Future<Prediction> getPrediction(String matchId) async {
     try {

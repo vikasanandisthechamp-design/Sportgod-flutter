@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/favorites_service.dart';
 import '../models/cricket_models.dart';
 import '../theme/app_theme.dart';
+import '../utils/debounce.dart';
 import '../widgets/shimmer_loading.dart';
 import '../widgets/team_logo_widget.dart';
 
@@ -18,14 +19,34 @@ class MatchesScreen extends StatefulWidget {
 class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserver {
   final _api = ApiService();
   final _favService = FavoritesService();
+  final _throttle = Throttle(cooldown: Duration(seconds: 2));
   List<CricketMatch> _matches = [];
   Set<String> _favoriteIds = {};
   bool  _loading  = true;
   bool  _silentRefreshing = false;
   Timer? _pollTimer;
 
+  String _filterType = 'all';
+  String _sortBy = 'default';
+
   static const _liveInterval  = Duration(seconds: 8);
   static const _quietInterval = Duration(seconds: 30);
+
+  static const _greenAccent = Color(0xFF00E5A8);
+
+  static const _filterOptions = <String, String>{
+    'all':  'All',
+    't20':  'T20',
+    'odi':  'ODI',
+    'test': 'Test',
+    'live': 'Live Only',
+  };
+
+  static const _sortOptions = <String, String>{
+    'default': 'Default',
+    'recent':  'Most Recent',
+    'type':    'Match Type',
+  };
 
   @override
   void initState() {
@@ -95,16 +116,73 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
     );
   }
 
+  List<CricketMatch> get _filteredMatches {
+    List<CricketMatch> result;
+    switch (_filterType) {
+      case 't20':
+        result = _matches.where((m) => m.matchType.toUpperCase() == 'T20').toList();
+      case 'odi':
+        result = _matches.where((m) => m.matchType.toUpperCase() == 'ODI').toList();
+      case 'test':
+        result = _matches.where((m) => m.matchType.toUpperCase() == 'TEST').toList();
+      case 'live':
+        result = _matches.where((m) => m.isLive).toList();
+      default:
+        result = List.of(_matches);
+    }
+
+    switch (_sortBy) {
+      case 'recent':
+        result.sort((a, b) => b.date.compareTo(a.date));
+      case 'type':
+        result.sort((a, b) => a.matchType.compareTo(b.matchType));
+      default:
+        // Default: live first, then by date descending
+        result.sort((a, b) {
+          if (a.isLive && !b.isLive) return -1;
+          if (!a.isLive && b.isLive) return 1;
+          return b.date.compareTo(a.date);
+        });
+    }
+
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final favorites = _matches.where((m) => _favoriteIds.contains(m.id)).toList();
-    final live  = _matches.where((m) => m.isLive).toList();
-    final other = _matches.where((m) => !m.isLive).toList();
+    final filtered  = _filteredMatches;
+    final favorites = filtered.where((m) => _favoriteIds.contains(m.id)).toList();
+    final live      = filtered.where((m) => m.isLive).toList();
+    final other     = filtered.where((m) => !m.isLive).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Matches'),
         actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort_rounded, size: 22),
+            tooltip: 'Sort',
+            color: SGColors.card,
+            onSelected: (value) => setState(() => _sortBy = value),
+            itemBuilder: (_) => _sortOptions.entries.map((e) => PopupMenuItem(
+              value: e.key,
+              child: Row(
+                children: [
+                  if (_sortBy == e.key)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(Icons.check_rounded, size: 16, color: _greenAccent),
+                    )
+                  else
+                    const SizedBox(width: 24),
+                  Text(e.value, style: TextStyle(
+                    color: _sortBy == e.key ? _greenAccent : SGColors.textPrimary,
+                    fontSize: 14,
+                  )),
+                ],
+              ),
+            )).toList(),
+          ),
           if (_silentRefreshing)
             const Padding(
               padding: EdgeInsets.only(right: 16),
@@ -116,7 +194,7 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
           else
             IconButton(
               icon: const Icon(Icons.refresh_rounded, size: 22),
-              onPressed: _load,
+              onPressed: () => _throttle.call(() => _load()),
             ),
         ],
       ),
@@ -125,8 +203,10 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
                 children: [
+                  _buildFilterChips(),
+                  const SizedBox(height: 12),
                   if (favorites.isNotEmpty) ...[
                     _sectionHeader('FAVORITES', SGColors.warn),
                     const SizedBox(height: 8),
@@ -144,7 +224,7 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
                     const SizedBox(height: 8),
                     ...other.map(_matchCard),
                   ],
-                  if (_matches.isEmpty)
+                  if (filtered.isEmpty)
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.all(40),
@@ -155,6 +235,41 @@ class _MatchesScreenState extends State<MatchesScreen> with WidgetsBindingObserv
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _filterOptions.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final entry = _filterOptions.entries.elementAt(index);
+          final selected = _filterType == entry.key;
+          return FilterChip(
+            label: Text(entry.value),
+            selected: selected,
+            onSelected: (_) => setState(() => _filterType = entry.key),
+            selectedColor: _greenAccent,
+            backgroundColor: SGColors.card,
+            checkmarkColor: SGColors.bg,
+            side: BorderSide(
+              color: selected ? _greenAccent : Colors.white.withValues(alpha: 0.08),
+            ),
+            labelStyle: TextStyle(
+              color: selected ? SGColors.bg : SGColors.textSecondary,
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          );
+        },
+      ),
     );
   }
 

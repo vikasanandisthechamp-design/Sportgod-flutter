@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../config/env_config.dart';
 import '../../providers/coins_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/debounce.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class PredictScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class PredictScreen extends StatefulWidget {
 }
 
 class _PredictScreenState extends State<PredictScreen> {
+  final _throttle = Throttle(cooldown: Duration(seconds: 2));
   List<Map<String, dynamic>> _questions = [];
   final Map<String, _Selection> _selections = {};
   bool _loading = true;
@@ -248,7 +250,7 @@ class _PredictScreenState extends State<PredictScreen> {
                             child: SizedBox(
                               width: double.infinity, height: 50,
                               child: ElevatedButton(
-                                onPressed: _submitting ? null : _submit,
+                                onPressed: _submitting ? null : () => _throttle.call(() => _submit()),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF00E5A8),
                                   foregroundColor: const Color(0xFF0F0F11),

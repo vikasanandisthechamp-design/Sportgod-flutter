@@ -6,6 +6,7 @@ import '../models/cricket_models.dart';
 import '../services/api_service.dart';
 import '../services/favorites_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/debounce.dart';
 import '../widgets/shimmer_loading.dart';
 import '../widgets/team_logo_widget.dart';
 import 'search_screen.dart';
@@ -18,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _api = ApiService();
+  final _throttle = Throttle(cooldown: Duration(seconds: 2));
   List<CricketMatch> _matches  = [];
   bool               _loading  = true;
   bool               _silentRefreshing = false; // background refresh — no spinner
@@ -118,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           else
             IconButton(
               icon: const Icon(Icons.refresh, size: 22),
-              onPressed: _load,
+              onPressed: () => _throttle.call(() => _load()),
               tooltip: 'Refresh',
             ),
         ],
