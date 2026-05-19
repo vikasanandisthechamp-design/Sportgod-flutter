@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../models/cricket_models.dart';
 import '../services/api_service.dart';
 import '../services/favorites_service.dart';
+import '../services/match_follow_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/debounce.dart';
 import '../widgets/shimmer_loading.dart';
@@ -157,18 +158,26 @@ class _MatchCard extends StatefulWidget {
 }
 
 class _MatchCardState extends State<_MatchCard> {
-  static final _favService = FavoritesService();
-  bool _isFavorite = false;
+  static final _favService    = FavoritesService();
+  static final _followService = MatchFollowService();
+  bool _isFavorite  = false;
+  bool _isFollowing = false;
 
   @override
   void initState() {
     super.initState();
     _loadFavorite();
+    _loadFollow();
   }
 
   Future<void> _loadFavorite() async {
     final fav = await _favService.isFavorite(widget.match.id);
     if (mounted) setState(() => _isFavorite = fav);
+  }
+
+  Future<void> _loadFollow() async {
+    final following = await _followService.isFollowing(widget.match.id);
+    if (mounted) setState(() => _isFollowing = following);
   }
 
   Future<void> _toggleFavorite() async {
@@ -200,6 +209,15 @@ class _MatchCardState extends State<_MatchCard> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (_isFollowing)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Icon(
+                        Icons.notifications_rounded,
+                        size: 16,
+                        color: SGColors.primary,
+                      ),
+                    ),
                   GestureDetector(
                     onTap: _toggleFavorite,
                     child: Icon(
