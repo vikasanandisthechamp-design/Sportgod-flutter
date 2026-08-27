@@ -1,0 +1,7 @@
+{
+  "_readme": "Add these deps to inovers-web/package.json 'dependencies'. Everything else on the file list uses libraries already in the April scaffold (@supabase/ssr, @supabase/supabase-js, zod, lucide-react, tailwind-merge, clsx).",
+  "add_dependencies": {
+    "@anthropic-ai/sdk": "^0.35.0"
+  },
+  "add_devDependencies": {}
+}

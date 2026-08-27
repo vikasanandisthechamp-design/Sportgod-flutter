@@ -1,0 +1,9 @@
+{
+  "_readme": "Merge this into vercel.json at the inovers-web repo root. If vercel.json doesn't exist, this IS the file.",
+  "crons": [
+    {
+      "path": "/api/cron/research",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

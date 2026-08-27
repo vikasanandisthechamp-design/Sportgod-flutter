@@ -1,0 +1,88 @@
+/* Append these rules into src/app/globals.css (after the existing @theme block).
+   They add the .prose-inovers class used to render post bodies. */
+
+.prose-inovers {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  max-width: 68ch;
+}
+
+.prose-inovers > * + * {
+  margin-top: 1rem;
+}
+
+.prose-inovers h2 {
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 768px) {
+  .prose-inovers h2 { font-size: 1.75rem; }
+}
+
+.prose-inovers h3 {
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.prose-inovers p {
+  color: color-mix(in oklab, var(--foreground) 92%, transparent);
+}
+
+.prose-inovers strong { font-weight: 600; }
+.prose-inovers em { font-style: italic; }
+
+.prose-inovers ul, .prose-inovers ol {
+  padding-left: 1.5rem;
+}
+
+.prose-inovers blockquote {
+  border-left: 3px solid var(--primary);
+  padding: 0.75rem 1.25rem;
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+  border-radius: 0.5rem;
+  font-style: italic;
+}
+
+.prose-inovers code {
+  background: var(--muted);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.92em;
+  font-family: var(--font-mono);
+}
+
+.prose-inovers pre {
+  overflow-x: auto;
+  background: var(--muted);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9em;
+}
+
+.prose-inovers a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: color-mix(in oklab, var(--primary) 40%, transparent);
+}
+.prose-inovers a:hover {
+  text-decoration-color: var(--primary);
+}
+
+.prose-inovers img {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+
+.prose-inovers hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
